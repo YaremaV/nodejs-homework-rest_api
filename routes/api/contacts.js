@@ -3,10 +3,17 @@ const createError = require("http-errors");
 const router = express.Router();
 const { Contact } = require("../../model");
 const { joiSchema } = require("../../model/contact");
+const { authenticate } = require("../../middlewares");
 
-router.get("/", async (req, res, next) => {
+router.get("/", authenticate, async (req, res, next) => {
   try {
-    const contacts = await Contact.find();
+    const { page = 1, limit = 20 } = req.query;
+    const skip = (page - 1) * limit;
+    const { _id } = req.user;
+    const contacts = await Contact.find({ owner: _id }, "", {
+      skip,
+      limit: +limit,
+    });
     res.json(contacts);
   } catch (error) {
     next(error);
@@ -29,14 +36,17 @@ router.get("/:contactId", async (req, res, next) => {
   }
 });
 
-router.post("/", async (req, res, next) => {
+router.post("/", authenticate, async (req, res, next) => {
+  console.log(req.user);
   try {
     const { error } = joiSchema.validate(req.body);
+
     if (error) {
       error.status = 400;
       throw error;
     }
-    const newContact = await Contact.create(req.body);
+    const { _id } = req.user;
+    const newContact = await Contact.create({ ...req.body, owner: _id });
     res.status(201).json(newContact);
   } catch (error) {
     if (error.message.includes("validation failed")) {
