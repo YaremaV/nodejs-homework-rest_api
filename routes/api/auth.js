@@ -4,6 +4,7 @@ const { User } = require("../../model");
 const { joiRegisterSchema, joiLoginSchema } = require("../../model/user");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const gravatar = require("gravatar");
 
 const router = express.Router();
 
@@ -22,10 +23,12 @@ router.post("/signup", async (req, res, next) => {
     }
     const salt = await bcrypt.genSalt(10);
     const hashPassword = await bcrypt.hash(password, salt);
+    const avatarURL = gravatar.url(email);
     const newUser = await User.create({
       email,
       password: hashPassword,
       subscription,
+      avatarURL,
     });
     res.status(201).json({
       user: {

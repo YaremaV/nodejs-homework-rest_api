@@ -37,7 +37,6 @@ router.get("/:contactId", async (req, res, next) => {
 });
 
 router.post("/", authenticate, async (req, res, next) => {
-  console.log(req.user);
   try {
     const { error } = joiSchema.validate(req.body);
 
